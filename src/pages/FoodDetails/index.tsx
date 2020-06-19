@@ -74,6 +74,22 @@ const FoodDetails: React.FC = () => {
   useEffect(() => {
     async function loadFood(): Promise<void> {
       // Load a specific food with extras based on routeParams id
+      const { data } = await api.get(`foods/${routeParams.id}`);
+
+      const currentyFood: Food = data;
+
+      setFood(currentyFood);
+
+      const newExtras = currentyFood.extras.map(extra => {
+        const { id, name, value } = extra;
+        return {
+          id,
+          name,
+          value,
+          quantity: 0,
+        };
+      });
+      setExtras(newExtras);
     }
 
     loadFood();
@@ -81,30 +97,93 @@ const FoodDetails: React.FC = () => {
 
   function handleIncrementExtra(id: number): void {
     // Increment extra quantity
+
+    const newExtras = extras.map(extra => {
+      if (extra.id === id) {
+        const newExtra = {
+          id: extra.id,
+          name: extra.name,
+          value: extra.value,
+          quantity:
+            !!extra.quantity && extra.quantity >= 0 ? extra.quantity + 1 : 1,
+        };
+
+        return newExtra;
+      }
+      return extra;
+    });
+
+    setExtras(newExtras);
   }
 
   function handleDecrementExtra(id: number): void {
     // Decrement extra quantity
+    const newExtras = extras.map(extra => {
+      if (extra.id === id) {
+        const newExtra = {
+          id: extra.id,
+          name: extra.name,
+          value: extra.value,
+          quantity:
+            !!extra.quantity && extra.quantity >= 1 ? extra.quantity - 1 : 0,
+        };
+
+        return newExtra;
+      }
+      return extra;
+    });
+
+    setExtras(newExtras);
   }
 
   function handleIncrementFood(): void {
     // Increment food quantity
+    setFoodQuantity(foodQuantity + 1);
   }
 
   function handleDecrementFood(): void {
     // Decrement food quantity
+    if (foodQuantity > 1) {
+      setFoodQuantity(foodQuantity - 1);
+    }
+  }
+
+  function currencyFormat(num: number): string {
+    return num
+      .toFixed(2) // always two decimal digits
+      .replace('.', ',') // replace decimal point character with ,
+      .replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.'); // use . as a separator
   }
 
   const toggleFavorite = useCallback(() => {
     // Toggle if food is favorite or not
+    setIsFavorite(!isFavorite);
+
+    // if (!isFavorite) {
+    //   api.put('favorites', { food }).then(() => setIsFavorite(!isFavorite));
+    // }
   }, [isFavorite, food]);
 
   const cartTotal = useMemo(() => {
     // Calculate cartTotal
+    const foodPrice = food.price * foodQuantity;
+    const extraPrice = extras.reduce(
+      (acculator, currentValue) =>
+        acculator + currentValue.quantity * currentValue.value,
+      0,
+    );
+
+    const finalValue =
+      foodPrice +
+      (!!extraPrice && extraPrice > 0 && foodPrice > 0 ? extraPrice : 0);
+
+    return `R$ ${currencyFormat(finalValue)}`;
   }, [extras, food, foodQuantity]);
 
   async function handleFinishOrder(): Promise<void> {
     // Finish the order and save on the API
+    // await api.put('orders', { food });
+    // console.log(food);
   }
 
   // Calculate the correct icon name

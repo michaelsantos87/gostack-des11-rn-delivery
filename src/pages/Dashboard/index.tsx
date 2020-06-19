@@ -35,6 +35,7 @@ interface Food {
   price: number;
   thumbnail_url: string;
   formattedPrice: string;
+  category: number;
 }
 
 interface Category {
@@ -55,11 +56,50 @@ const Dashboard: React.FC = () => {
 
   async function handleNavigate(id: number): Promise<void> {
     // Navigate do ProductDetails page
+
+    // const food = foods.filter(actualFood => actualFood.id === id);
+
+    navigation.navigate('FoodDetails', { id });
   }
 
   useEffect(() => {
     async function loadFoods(): Promise<void> {
-      // Load Foods from API
+      // Load foods from API
+
+      const response = await api.get('foods', {
+        params: {
+          category_like: selectedCategory,
+          name_like: searchValue,
+        },
+      });
+
+      const actualFoods: Food[] = Array.isArray(response.data)
+        ? response.data
+        : [response.data];
+
+      setFoods(actualFoods);
+
+      // const routeParam =
+      //   !selectedCategory || selectedCategory < 1 ? '' : `/${selectedCategory}`;
+
+      // const { data } = await api.get(`/foods${routeParam}`);
+
+      // let actualFoods: Food[] = Array.isArray(data) ? data : [data];
+
+      // if (searchValue) {
+      //   const filtered = actualFoods.filter(food =>
+      //     food.name.includes(searchValue),
+      //   );
+
+      //   // console.log(filtered);
+      //   actualFoods = filtered;
+      // }
+
+      // setFoods(actualFoods);
+
+      // if (searchValue) {
+      //   actualFoods;
+      // }
     }
 
     loadFoods();
@@ -68,6 +108,9 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     async function loadCategories(): Promise<void> {
       // Load categories from API
+      const { data } = await api.get('/categories');
+
+      setCategories(data);
     }
 
     loadCategories();
@@ -75,6 +118,11 @@ const Dashboard: React.FC = () => {
 
   function handleSelectCategory(id: number): void {
     // Select / deselect category
+    if (id === selectedCategory) {
+      setSelectedCategory(undefined);
+      return;
+    }
+    setSelectedCategory(id);
   }
 
   return (
